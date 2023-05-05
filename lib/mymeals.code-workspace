@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "mymeals",
+			"path": "../mymeals"
+		}
+	],
+	"settings": {}
+}

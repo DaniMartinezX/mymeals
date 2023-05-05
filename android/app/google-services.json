@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "379423361798",
+    "project_id": "mymeals-flutter-project",
+    "storage_bucket": "mymeals-flutter-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:379423361798:android:553081e009d6004ea46c87",
+        "android_client_info": {
+          "package_name": "com.daniel.mymeals"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "379423361798-o5t50v4fqsi2kt87s68qgd6q3k2p1q9k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjKX0y1YcEZ3mMejrk704NsGEKbR_vYSI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "379423361798-o5t50v4fqsi2kt87s68qgd6q3k2p1q9k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
