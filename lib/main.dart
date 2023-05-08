@@ -21,6 +21,7 @@ void main() {
       routes: {
         '/login/': (context) => const LoginView(),
         '/register/': (context) => const RegisterView(),
+        '/meals/': (context) => const MealsView(),
       },
     ),
   );
@@ -78,7 +79,7 @@ class _MealsViewState extends State<MealsView> {
               switch (value){
                 case MenuAction.logout:
                   final shouldLogout = await showLogOutDialog(context);
-                  print('menu log out');
+                  devtools.log('menu log out');
                   if (shouldLogout){
                     await FirebaseAuth.instance.signOut();
                     Navigator.of(context).pushNamedAndRemoveUntil(
