@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:mymeals/firebase_options.dart';
 
 
 class LoginView extends StatefulWidget {
@@ -31,20 +29,7 @@ late final TextEditingController _password;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title:const Text('Login'),
-      ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-                options: DefaultFirebaseOptions.currentPlatform,
-              
-              ),
-        //El SNAPSHOT es el encargado de proveer los datos al futuro
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState){
-            case ConnectionState.done:
-              return Column(
+   return Column(
           children: [
             TextField(
               controller: _email,
@@ -92,15 +77,6 @@ late final TextEditingController _password;
               child: const Text('Login'),
             ),
             ],
-        ); 
-            
-            default:
-            return const Text('Loading...');
-          }
-          
-        }, 
-        
-      ),
-    );
+        );
   }
 }
