@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:firebase_core/firebase_core.dart';
 import 'package:mymeals/services/auth/auth_user.dart';
 import 'package:mymeals/services/auth/auth_provider.dart';
 import 'package:mymeals/services/auth/auth_exceptions.dart';
