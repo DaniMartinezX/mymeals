@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/firebase_options.dart';
 import 'package:mymeals/views/login_view.dart';
 import 'package:mymeals/views/register_view.dart';
 import 'package:mymeals/views/verify_email_view.dart';
 import 'dart:developer' as devtools show log;
+
+
 
 void main() {
   //Binding
@@ -19,9 +22,9 @@ void main() {
       ),
       home: const HomePage(),
       routes: {
-        '/login/': (context) => const LoginView(),
-        '/register/': (context) => const RegisterView(),
-        '/meals/': (context) => const MealsView(),
+        loginRoute: (context) => const LoginView(),
+        registerRoute: (context) => const RegisterView(),
+        mealsRoute: (context) => const MealsView(),
       },
     ),
   );
@@ -83,7 +86,7 @@ class _MealsViewState extends State<MealsView> {
                   if (shouldLogout){
                     await FirebaseAuth.instance.signOut();
                     Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/login/',
+                      loginRoute,
                      (route) => false,
                      );
                   }
