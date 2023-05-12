@@ -33,9 +33,12 @@ class _MealsViewState extends State<MealsView> {
       appBar: AppBar(
         title: const Text('Your Meals'),
         actions: [
-          IconButton(onPressed: () {
-            Navigator.of(context).pushNamed(newMealRoute);
-          }, icon: const Icon(Icons.add)),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed(newMealRoute);
+            },
+            icon: const Icon(Icons.add),
+          ),
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
               switch (value) {
@@ -71,6 +74,7 @@ class _MealsViewState extends State<MealsView> {
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
+                    case ConnectionState.active:
                       return const Text('Waiting for all meals...');
                     default:
                       return const CircularProgressIndicator();
