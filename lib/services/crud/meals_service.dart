@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:mymeals/services/crud/crud_exceptions.dart';
@@ -11,14 +13,27 @@ import 'package:path/path.dart' show join;
 class NotesService {
   Database? _db;
 
+  List<DatabaseMeal> _meals = [];
+
+  final _mealsStreamController =
+    StreamController<List<DatabaseMeal>>.broadcast();
+
+  Future<void> _cacheMeals() async {
+    final allMeals = await getAllMeals();
+    _meals = allMeals.toList();
+    _mealsStreamController.add(_meals);
+  }
+
   Future<DatabaseMeal> updateMeal({
     required DatabaseMeal meal,
     required String text
   }) async {
     final db = _getDatabaseOrThrow();
 
+    //Make sure meal exists
     await getMeal(id: meal.id);
 
+    //update DB
     final updatesCount = await db.update(mealTable, {
       textColumn: text,
       isSynceWithCloudColumn: 0});
@@ -26,12 +41,16 @@ class NotesService {
     if (updatesCount == 0) {
       throw CouldNotUpdateMeal();
     } else {
-      return await getMeal(id: meal.id);
+      final updatedMeal = await getMeal(id: meal.id);
+      _meals.removeWhere((meal) => meal.id == updatedMeal.id);
+      _meals.add(updatedMeal);
+      _mealsStreamController.add(_meals);
+      return updatedMeal;
     }
 
     }
 
-  Future<Iterable<DatabaseMeal>> getAllNotes() async {
+  Future<Iterable<DatabaseMeal>> getAllMeals() async {
     final db = _getDatabaseOrThrow();
     final meals = await db.query(
       mealTable
@@ -52,7 +71,11 @@ class NotesService {
     if (meals.isEmpty){
       throw CouldNotFindMeal();
     } else {
-      return DatabaseMeal.fromRow(meals.first);
+      final meal = DatabaseMeal.fromRow(meals.first);
+      _meals.removeWhere((meal) => meal.id == id);
+      _meals.add(meal);
+      _mealsStreamController.add(_meals);
+      return meal;
     }
   }
 
@@ -65,12 +88,18 @@ class NotesService {
     );
     if (deletedCount == 0) {
       throw CouldNotDeleteMeal();
+    } else {
+      _meals.removeWhere((meal) => meal.id == id);
+      _mealsStreamController.add(_meals);
     }
   }
 
   Future<int> deleteAllMeals() async {
     final db = _getDatabaseOrThrow();
-    return await db.delete(mealTable);
+    final numberOfDeletions = await db.delete(mealTable);
+    _meals = [];
+    _mealsStreamController.add(_meals);
+    return numberOfDeletions;
   }
 
   Future<DatabaseMeal> createMeal({required DatabaseUser owner}) async {
@@ -94,6 +123,9 @@ class NotesService {
       text: text,
       isSyncedWithCloud: true,
     );
+
+    _meals.add(meal);
+    _mealsStreamController.add(_meals);
 
     return meal;
   }
@@ -178,8 +210,11 @@ class NotesService {
       final db = await openDatabase(dbPath);
       _db = db;
 
+      //create user table
       await db.execute(createUserTable);
+      //create note table
       await db.execute(createMealTable);
+      await _cacheMeals();
     } on MissingPlatformDirectoryException {
       throw UnableToGetDocumentsDirectory();
     }
