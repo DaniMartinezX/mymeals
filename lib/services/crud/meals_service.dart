@@ -1,20 +1,155 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:mymeals/services/crud/crud_exceptions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' show join;
 
-class DatabaseAlreadyOpenException implements Exception {}
 
-class UnableToGetDocumentsDirectory implements Exception {}
-
-class DatabaseIsNotOpen implements Exception {}
 
 //Para comunicarse con la BD.
 class NotesService {
   Database? _db;
 
-  Database _getDatabaseOrThrow(){
+  Future<DatabaseMeal> updateMeal({
+    required DatabaseMeal meal,
+    required String text
+  }) async {
+    final db = _getDatabaseOrThrow();
+
+    await getMeal(id: meal.id);
+
+    final updatesCount = await db.update(mealTable, {
+      textColumn: text,
+      isSynceWithCloudColumn: 0});
+
+    if (updatesCount == 0) {
+      throw CouldNotUpdateMeal();
+    } else {
+      return await getMeal(id: meal.id);
+    }
+
+    }
+
+  Future<Iterable<DatabaseMeal>> getAllNotes() async {
+    final db = _getDatabaseOrThrow();
+    final meals = await db.query(
+      mealTable
+    );
+
+    return meals.map((mealRow) => DatabaseMeal.fromRow(mealRow));
+  }
+
+  Future<DatabaseMeal> getMeal({required int id}) async {
+    final db = _getDatabaseOrThrow();
+    final meals = await db.query(
+      mealTable,
+      limit: 1,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (meals.isEmpty){
+      throw CouldNotFindMeal();
+    } else {
+      return DatabaseMeal.fromRow(meals.first);
+    }
+  }
+
+  Future<void> deleteMeal({required int id}) async {
+    final db = _getDatabaseOrThrow();
+    final deletedCount = await db.delete(
+      mealTable,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (deletedCount == 0) {
+      throw CouldNotDeleteMeal();
+    }
+  }
+
+  Future<int> deleteAllMeals() async {
+    final db = _getDatabaseOrThrow();
+    return await db.delete(mealTable);
+  }
+
+  Future<DatabaseMeal> createMeal({required DatabaseUser owner}) async {
+    final db = _getDatabaseOrThrow();
+
+    //Make sure owner exists in the database with the correct id
+
+    final dbUser = await getUser(email: owner.email);
+    if (dbUser != owner) {
+      throw CouldNotFindUser();
+    }
+
+    const text = '';
+    //create the meal
+    final mealId = await db.insert(mealTable,
+        {userIdColumn: owner.id, textColumn: text, isSynceWithCloudColumn: 1});
+
+    final meal = DatabaseMeal(
+      id: mealId,
+      userId: owner.id,
+      text: text,
+      isSyncedWithCloud: true,
+    );
+
+    return meal;
+  }
+
+  Future<DatabaseUser> getUser({required String email}) async {
+    final db = _getDatabaseOrThrow();
+
+    final results = await db.query(
+      userTable,
+      limit: 1,
+      where: 'email = ?',
+      whereArgs: [email.toLowerCase()],
+    );
+
+    if (results.isEmpty) {
+      throw CouldNotFindUser();
+    } else {
+      return DatabaseUser.fromRow(results.first);
+    }
+  }
+
+  Future<DatabaseUser> createUser({required String email}) async {
+    final db = _getDatabaseOrThrow();
+    final results = await db.query(
+      userTable,
+      limit: 1,
+      where: 'email = ?',
+      whereArgs: [email.toLowerCase()],
+    );
+    if (results.isNotEmpty) {
+      throw UserAlreadyExist();
+    }
+
+    final userId = await db.insert(userTable, {
+      emailColumn: email.toLowerCase(),
+    });
+
+    return DatabaseUser(
+      id: userId,
+      email: email,
+    );
+  }
+
+  Future<void> deleteUser({required String email}) async {
+    final db = _getDatabaseOrThrow();
+    final deleteCount = await db.delete(
+      userTable,
+      where: 'email = ?',
+      whereArgs: [email.toLowerCase()],
+    );
+    if (deleteCount != 1) {
+      throw CouldNotDeleteUser();
+    }
+  }
+
+  Database _getDatabaseOrThrow() {
     final db = _db;
     if (db == null) {
       throw DatabaseIsNotOpen();
@@ -25,14 +160,12 @@ class NotesService {
 
   Future<void> close() async {
     final db = _db;
-    if (db == null){
+    if (db == null) {
       throw DatabaseIsNotOpen();
     } else {
       await db.close();
       _db = null;
     }
-    
-
   }
 
   Future<void> open() async {
@@ -45,9 +178,8 @@ class NotesService {
       final db = await openDatabase(dbPath);
       _db = db;
 
-    await db.execute(createUserTable);
-    await db.execute(createMealTable);
-
+      await db.execute(createUserTable);
+      await db.execute(createMealTable);
     } on MissingPlatformDirectoryException {
       throw UnableToGetDocumentsDirectory();
     }
