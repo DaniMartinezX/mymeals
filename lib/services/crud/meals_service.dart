@@ -247,7 +247,7 @@ class MealsService {
 
       //create user table
       await db.execute(createUserTable);
-      //create note table
+      //create meal table
       await db.execute(createMealTable);
       await _cacheMeals();
     } on MissingPlatformDirectoryException {

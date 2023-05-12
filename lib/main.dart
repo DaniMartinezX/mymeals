@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
 import 'package:mymeals/views/login_view.dart';
-import 'package:mymeals/views/meals_view.dart';
+import 'package:mymeals/views/meals/meals_view.dart';
+import 'package:mymeals/views/meals/new_meal_view.dart';
 import 'package:mymeals/views/register_view.dart';
 import 'package:mymeals/views/verify_email_view.dart';
 
@@ -24,6 +25,7 @@ void main() {
         registerRoute: (context) => const RegisterView(),
         mealsRoute: (context) => const MealsView(),
         verifyEmailRoute:(context) => const VerifyEmailView(),
+        newMealRoute:(context) => const NewMealView(),
       },
     ),
   );

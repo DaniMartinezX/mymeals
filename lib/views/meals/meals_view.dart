@@ -31,8 +31,11 @@ class _MealsViewState extends State<MealsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Main UI'),
+        title: const Text('Your Meals'),
         actions: [
+          IconButton(onPressed: () {
+            Navigator.of(context).pushNamed(newMealRoute);
+          }, icon: const Icon(Icons.add)),
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
               switch (value) {
@@ -60,23 +63,23 @@ class _MealsViewState extends State<MealsView> {
       ),
       body: FutureBuilder(
         future: _mealsService.getOrCreateUser(email: userEmail),
-        builder: (context, snapshot){
-          switch (snapshot.connectionState){
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
             case ConnectionState.done:
               return StreamBuilder(
                 stream: _mealsService.allMeals,
-                builder: (context, snapshot){
-                  switch(snapshot.connectionState){
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
                       return const Text('Waiting for all meals...');
                     default:
-                    return const CircularProgressIndicator();
+                      return const CircularProgressIndicator();
                   }
                 },
               );
             default:
-            return const CircularProgressIndicator();
-          }          
+              return const CircularProgressIndicator();
+          }
         },
       ),
     );
