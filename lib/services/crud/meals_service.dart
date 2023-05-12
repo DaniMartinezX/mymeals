@@ -10,15 +10,34 @@ import 'package:path/path.dart' show join;
 
 
 //Para comunicarse con la BD.
-class NotesService {
+class MealsService {
   Database? _db;
 
   List<DatabaseMeal> _meals = [];
 
+  static final MealsService _shared = MealsService._sharedInstance();
+  MealsService._sharedInstance();
+  factory MealsService() => _shared;
+
   final _mealsStreamController =
     StreamController<List<DatabaseMeal>>.broadcast();
 
+  Stream<List<DatabaseMeal>> get allMeals => _mealsStreamController.stream;
+
+  Future<DatabaseUser>getOrCreateUser({required String email}) async {
+    try {
+      final user = await getUser(email: email);
+      return user ;
+    } on CouldNotFindUser {
+      final createdUser = await createUser(email: email);
+      return createdUser;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> _cacheMeals() async {
+    await _ensureDbIsOpen();
     final allMeals = await getAllMeals();
     _meals = allMeals.toList();
     _mealsStreamController.add(_meals);
@@ -28,6 +47,7 @@ class NotesService {
     required DatabaseMeal meal,
     required String text
   }) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     //Make sure meal exists
@@ -60,6 +80,7 @@ class NotesService {
   }
 
   Future<DatabaseMeal> getMeal({required int id}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final meals = await db.query(
       mealTable,
@@ -80,6 +101,7 @@ class NotesService {
   }
 
   Future<void> deleteMeal({required int id}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deletedCount = await db.delete(
       mealTable,
@@ -95,6 +117,7 @@ class NotesService {
   }
 
   Future<int> deleteAllMeals() async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final numberOfDeletions = await db.delete(mealTable);
     _meals = [];
@@ -103,6 +126,7 @@ class NotesService {
   }
 
   Future<DatabaseMeal> createMeal({required DatabaseUser owner}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     //Make sure owner exists in the database with the correct id
@@ -131,6 +155,7 @@ class NotesService {
   }
 
   Future<DatabaseUser> getUser({required String email}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
     final results = await db.query(
@@ -148,6 +173,7 @@ class NotesService {
   }
 
   Future<DatabaseUser> createUser({required String email}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final results = await db.query(
       userTable,
@@ -170,6 +196,7 @@ class NotesService {
   }
 
   Future<void> deleteUser({required String email}) async {
+    await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
     final deleteCount = await db.delete(
       userTable,
@@ -197,6 +224,14 @@ class NotesService {
     } else {
       await db.close();
       _db = null;
+    }
+  }
+
+  Future<void> _ensureDbIsOpen() async {
+    try{
+      await open();
+    } on DatabaseAlreadyOpenException{
+      //empty
     }
   }
 

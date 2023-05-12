@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/enums/menu_action.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
+import 'package:mymeals/services/crud/meals_service.dart';
 
 class MealsView extends StatefulWidget {
   const MealsView({super.key});
@@ -11,6 +12,21 @@ class MealsView extends StatefulWidget {
 }
 
 class _MealsViewState extends State<MealsView> {
+  late final MealsService _mealsService;
+  String get userEmail => AuthService.firebase().currentUser!.email!;
+
+  @override
+  void initState() {
+    _mealsService = MealsService();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _mealsService.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,16 +34,16 @@ class _MealsViewState extends State<MealsView> {
         title: const Text('Main UI'),
         actions: [
           PopupMenuButton<MenuAction>(
-            onSelected: (value) async{
-              switch (value){
+            onSelected: (value) async {
+              switch (value) {
                 case MenuAction.logout:
                   final shouldLogout = await showLogOutDialog(context);
-                  if (shouldLogout){
+                  if (shouldLogout) {
                     await AuthService.firebase().logOut();
                     Navigator.of(context).pushNamedAndRemoveUntil(
                       loginRoute,
-                     (route) => false,
-                     );
+                      (route) => false,
+                    );
                   }
               }
             },
@@ -42,7 +58,27 @@ class _MealsViewState extends State<MealsView> {
           )
         ],
       ),
-      body: const Text('Hello world'),
+      body: FutureBuilder(
+        future: _mealsService.getOrCreateUser(email: userEmail),
+        builder: (context, snapshot){
+          switch (snapshot.connectionState){
+            case ConnectionState.done:
+              return StreamBuilder(
+                stream: _mealsService.allMeals,
+                builder: (context, snapshot){
+                  switch(snapshot.connectionState){
+                    case ConnectionState.waiting:
+                      return const Text('Waiting for all meals...');
+                    default:
+                    return const CircularProgressIndicator();
+                  }
+                },
+              );
+            default:
+            return const CircularProgressIndicator();
+          }          
+        },
+      ),
     );
   }
 }
@@ -61,9 +97,11 @@ Future<bool> showLogOutDialog(BuildContext context) {
             },
             child: const Text('Cancel'),
           ),
-          TextButton(onPressed: () {
-              Navigator.of(context).pop(true);
-            }, child: const Text('Log out'))
+          TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Log out'))
         ],
       );
     },
