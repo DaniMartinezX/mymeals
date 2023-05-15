@@ -15,3 +15,5 @@ class CouldNotDeleteMeal implements Exception {}
 class CouldNotFindMeal implements Exception {}
 
 class CouldNotUpdateMeal implements Exception {}
+
+class UserShouldBeSetBeforeReadinfAllMeals implements Exception {}

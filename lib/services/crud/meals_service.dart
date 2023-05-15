@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:mymeals/extensions/list/filter.dart';
 import 'package:mymeals/services/crud/crud_exceptions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' show join;
-
-
 
 //Para comunicarse con la BD.
 class MealsService {
@@ -15,8 +14,10 @@ class MealsService {
 
   List<DatabaseMeal> _meals = [];
 
+  DatabaseUser? _user;
+
   static final MealsService _shared = MealsService._sharedInstance();
-  MealsService._sharedInstance(){
+  MealsService._sharedInstance() {
     _mealsStreamController = StreamController<List<DatabaseMeal>>.broadcast(
       onListen: () {
         _mealsStreamController.sink.add(_meals);
@@ -26,16 +27,32 @@ class MealsService {
   factory MealsService() => _shared;
 
   late final StreamController<List<DatabaseMeal>> _mealsStreamController;
-    
 
-  Stream<List<DatabaseMeal>> get allMeals => _mealsStreamController.stream;
+  Stream<List<DatabaseMeal>> get allMeals =>
+      _mealsStreamController.stream.filter((meal) {
+        final currentUser = _user;
+        if (currentUser != null) {
+          return meal.userId == currentUser.id;
+        } else {
+          throw UserShouldBeSetBeforeReadinfAllMeals();
+        }
+      });
 
-  Future<DatabaseUser>getOrCreateUser({required String email}) async {
+  Future<DatabaseUser> getOrCreateUser({
+    required String email,
+    bool setAsCurrentUser = true,
+  }) async {
     try {
       final user = await getUser(email: email);
-      return user ;
+      if (setAsCurrentUser) {
+        _user = user;
+      }
+      return user;
     } on CouldNotFindUser {
       final createdUser = await createUser(email: email);
+      if (setAsCurrentUser) {
+        _user = createdUser;
+      }
       return createdUser;
     } catch (e) {
       rethrow;
@@ -49,10 +66,8 @@ class MealsService {
     _mealsStreamController.add(_meals);
   }
 
-  Future<DatabaseMeal> updateMeal({
-    required DatabaseMeal meal,
-    required String text
-  }) async {
+  Future<DatabaseMeal> updateMeal(
+      {required DatabaseMeal meal, required String text}) async {
     await _ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
@@ -60,9 +75,15 @@ class MealsService {
     await getMeal(id: meal.id);
 
     //update DB
-    final updatesCount = await db.update(mealTable, {
-      textColumn: text,
-      isSynceWithCloudColumn: 0});
+    final updatesCount = await db.update(
+      mealTable,
+      {
+        textColumn: text,
+        isSynceWithCloudColumn: 0,
+      },
+      where: 'id = ?',
+      whereArgs: [meal.id],
+    );
 
     if (updatesCount == 0) {
       throw CouldNotUpdateMeal();
@@ -73,14 +94,11 @@ class MealsService {
       _mealsStreamController.add(_meals);
       return updatedMeal;
     }
-
-    }
+  }
 
   Future<Iterable<DatabaseMeal>> getAllMeals() async {
     final db = _getDatabaseOrThrow();
-    final meals = await db.query(
-      mealTable
-    );
+    final meals = await db.query(mealTable);
 
     return meals.map((mealRow) => DatabaseMeal.fromRow(mealRow));
   }
@@ -95,7 +113,7 @@ class MealsService {
       whereArgs: [id],
     );
 
-    if (meals.isEmpty){
+    if (meals.isEmpty) {
       throw CouldNotFindMeal();
     } else {
       final meal = DatabaseMeal.fromRow(meals.first);
@@ -234,9 +252,9 @@ class MealsService {
   }
 
   Future<void> _ensureDbIsOpen() async {
-    try{
+    try {
       await open();
-    } on DatabaseAlreadyOpenException{
+    } on DatabaseAlreadyOpenException {
       //empty
     }
   }
