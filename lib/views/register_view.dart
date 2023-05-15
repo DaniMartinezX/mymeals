@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/services/auth/auth_exceptions.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
-import 'package:mymeals/utilities/show_error_dialog.dart';
+import 'package:mymeals/utilities/dialogs/error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -62,8 +62,6 @@ class _RegisterViewState extends State<RegisterView> {
               final email = _email.text;
               final password = _password.text;
               try {
-                
-
                 await AuthService.firebase().createUser(
                   email: email,
                   password: password,
@@ -72,26 +70,26 @@ class _RegisterViewState extends State<RegisterView> {
                 //En este caso es pushNamed para que el usuario vuelva a la anterior si se equivocó.
                 Navigator.of(context).pushNamed(verifyEmailRoute);
               } on WeakPasswordAuthException {
-                 await showErrorDialog(
-                    context,
-                    'Weak password',
-                  );
+                await showErrorDialog(
+                  context,
+                  'Weak password',
+                );
               } on EmailAlreadyInUseAuthException {
                 await showErrorDialog(
-                    context,
-                    'Email is already in use',
-                  );
+                  context,
+                  'Email is already in use',
+                );
               } on InvalidEmailAuthException {
                 await showErrorDialog(
-                    context,
-                    'This is an invalid email address',
-                  );
+                  context,
+                  'This is an invalid email address',
+                );
               } on GenericAuthException {
                 await showErrorDialog(
                   context,
                   'Failed to register',
                 );
-              } 
+              }
             },
             child: const Text('Register'),
           ),

@@ -3,6 +3,8 @@ import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/enums/menu_action.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
 import 'package:mymeals/services/crud/meals_service.dart';
+import 'package:mymeals/utilities/dialogs/logout_dialog.dart';
+import 'package:mymeals/views/meals/meals_list_view.dart';
 
 class MealsView extends StatefulWidget {
   const MealsView({super.key});
@@ -71,18 +73,10 @@ class _MealsViewState extends State<MealsView> {
                     case ConnectionState.active:
                       if (snapshot.hasData) {
                         final allMeals = snapshot.data as List<DatabaseMeal>;
-                        return ListView.builder(
-                            itemCount: allMeals.length,
-                            itemBuilder: (context, index) {
-                              final meal = allMeals[index];
-                              return ListTile(
-                                title: Text(
-                                  meal.text,
-                                  maxLines: 1,
-                                  softWrap: true,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              );
+                        return MealsListView(
+                            meals: allMeals,
+                            onDeleteMeal: (meal) async {
+                              await _mealsService.deleteMeal(id: meal.id);
                             });
                       } else {
                         return const CircularProgressIndicator();
@@ -99,29 +93,4 @@ class _MealsViewState extends State<MealsView> {
       ),
     );
   }
-}
-
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog<bool>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Sign out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Log out'))
-        ],
-      );
-    },
-  ).then((value) => value ?? false); //Si el valor del futuro es null
 }
