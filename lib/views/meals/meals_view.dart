@@ -22,12 +22,6 @@ class _MealsViewState extends State<MealsView> {
   }
 
   @override
-  void dispose() {
-    _mealsService.close();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +69,24 @@ class _MealsViewState extends State<MealsView> {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
                     case ConnectionState.active:
-                      return const Text('Waiting for all meals...');
+                      if (snapshot.hasData) {
+                        final allMeals = snapshot.data as List<DatabaseMeal>;
+                        return ListView.builder(
+                            itemCount: allMeals.length,
+                            itemBuilder: (context, index) {
+                              final meal = allMeals[index];
+                              return ListTile(
+                                title: Text(
+                                  meal.text,
+                                  maxLines: 1,
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            });
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
                     default:
                       return const CircularProgressIndicator();
                   }

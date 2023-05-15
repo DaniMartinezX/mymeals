@@ -16,11 +16,17 @@ class MealsService {
   List<DatabaseMeal> _meals = [];
 
   static final MealsService _shared = MealsService._sharedInstance();
-  MealsService._sharedInstance();
+  MealsService._sharedInstance(){
+    _mealsStreamController = StreamController<List<DatabaseMeal>>.broadcast(
+      onListen: () {
+        _mealsStreamController.sink.add(_meals);
+      },
+    );
+  }
   factory MealsService() => _shared;
 
-  final _mealsStreamController =
-    StreamController<List<DatabaseMeal>>.broadcast();
+  late final StreamController<List<DatabaseMeal>> _mealsStreamController;
+    
 
   Stream<List<DatabaseMeal>> get allMeals => _mealsStreamController.stream;
 
@@ -298,7 +304,7 @@ class DatabaseMeal {
         userId = map[userIdColumn] as int,
         text = map[textColumn] as String,
         isSyncedWithCloud =
-            (map[isSynceWithCloudColumn as int]) == 1 ? true : false;
+            (map[isSynceWithCloudColumn] as int) == 1 ? true : false;
 
   @override
   String toString() =>

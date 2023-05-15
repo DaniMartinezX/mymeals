@@ -4,10 +4,10 @@ import 'package:mymeals/services/auth/auth_service.dart';
 import 'package:mymeals/services/crud/meals_service.dart';
 
 class NewMealView extends StatefulWidget {
-  const NewMealView({super.key});
+  const NewMealView({Key? key}) : super(key:key);
 
   @override
-  State<NewMealView> createState() => _NewMealViewState();
+  _NewMealViewState createState() => _NewMealViewState();
 }
 
 class _NewMealViewState extends State<NewMealView> {
@@ -97,7 +97,6 @@ class _NewMealViewState extends State<NewMealView> {
                   hintText: 'Start typing your meal...'
                 ),
               );
-              break;
             default:
               return const CircularProgressIndicator();
           }
