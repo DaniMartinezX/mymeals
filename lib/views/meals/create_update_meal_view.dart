@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
 import 'package:mymeals/services/crud/meals_service.dart';
+import 'package:mymeals/utilities/generics/get_arguments.dart';
 
-class NewMealView extends StatefulWidget {
-  const NewMealView({Key? key}) : super(key:key);
+class CreateUpdateMealView extends StatefulWidget {
+  const CreateUpdateMealView({Key? key}) : super(key: key);
 
   @override
-  _NewMealViewState createState() => _NewMealViewState();
+  _CreateUpdateMealViewState createState() => _CreateUpdateMealViewState();
 }
 
-class _NewMealViewState extends State<NewMealView> {
+class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
   DatabaseMeal? _meal;
   late final MealsService _mealsService;
   late final TextEditingController _textController;
@@ -39,7 +40,15 @@ class _NewMealViewState extends State<NewMealView> {
     _textController.addListener(_textControllerListener);
   }
 
-  Future<DatabaseMeal> createNewMeal() async {
+  Future<DatabaseMeal> createOrGetExistingMeal(BuildContext context) async {
+    final widgetMeal = context.getArgument<DatabaseMeal>();
+
+    if (widgetMeal != null) {
+      _meal = widgetMeal;
+      _textController.text = widgetMeal.text;
+      return widgetMeal;
+    }
+
     final existingMeal = _meal;
     if (existingMeal != null) {
       return existingMeal;
@@ -47,7 +56,9 @@ class _NewMealViewState extends State<NewMealView> {
     final currentUser = AuthService.firebase().currentUser!;
     final email = currentUser.email!;
     final owner = await _mealsService.getUser(email: email);
-    return await _mealsService.createMeal(owner: owner);
+    final newMeal = await _mealsService.createMeal(owner: owner);
+    _meal = newMeal;
+    return newMeal;
   }
 
   void _deleteMealIfTextIsEmpty() {
@@ -83,19 +94,17 @@ class _NewMealViewState extends State<NewMealView> {
         title: const Text('New meal'),
       ),
       body: FutureBuilder(
-        future: createNewMeal(),
+        future: createOrGetExistingMeal(context),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              _meal = snapshot.data as DatabaseMeal;
               _setupTextControllerListener();
               return TextField(
                 controller: _textController,
                 keyboardType: TextInputType.multiline,
                 maxLines: null,
                 decoration: const InputDecoration(
-                  hintText: 'Start typing your meal...'
-                ),
+                    hintText: 'Start typing your meal...'),
               );
             default:
               return const CircularProgressIndicator();

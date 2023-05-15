@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:mymeals/services/crud/meals_service.dart';
 import 'package:mymeals/utilities/dialogs/delete_dialog.dart';
 
-typedef DeleteMealCallback = void Function(DatabaseMeal meals);
+typedef MealCallback = void Function(DatabaseMeal meals);
 
 class MealsListView extends StatelessWidget {
   final List<DatabaseMeal> meals;
-  final DeleteMealCallback onDeleteMeal;
+  final MealCallback onDeleteMeal;
+  final MealCallback onTap;
 
   const MealsListView({
     Key? key,
     required this.meals,
     required this.onDeleteMeal,
+    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -21,6 +23,9 @@ class MealsListView extends StatelessWidget {
         itemBuilder: (context, index) {
           final meal = meals[index];
           return ListTile(
+            onTap: () {
+              onTap(meal);
+            },
             title: Text(
               meal.text,
               maxLines: 1,

@@ -31,7 +31,7 @@ class _MealsViewState extends State<MealsView> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(context).pushNamed(newMealRoute);
+              Navigator.of(context).pushNamed(createOrUpdateMealRoute);
             },
             icon: const Icon(Icons.add),
           ),
@@ -74,10 +74,16 @@ class _MealsViewState extends State<MealsView> {
                       if (snapshot.hasData) {
                         final allMeals = snapshot.data as List<DatabaseMeal>;
                         return MealsListView(
-                            meals: allMeals,
-                            onDeleteMeal: (meal) async {
-                              await _mealsService.deleteMeal(id: meal.id);
-                            });
+                          meals: allMeals,
+                          onDeleteMeal: (meal) async {
+                            await _mealsService.deleteMeal(id: meal.id);
+                          },
+                          onTap: (meal) {
+                            Navigator.of(context).pushNamed(
+                                createOrUpdateMealRoute,
+                                arguments: meal);
+                          },
+                        );
                       } else {
                         return const CircularProgressIndicator();
                       }
