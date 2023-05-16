@@ -1,3 +1,4 @@
+/*
 class DatabaseAlreadyOpenException implements Exception {}
 
 class UnableToGetDocumentsDirectory implements Exception {}
@@ -17,3 +18,4 @@ class CouldNotFindMeal implements Exception {}
 class CouldNotUpdateMeal implements Exception {}
 
 class UserShouldBeSetBeforeReadinfAllMeals implements Exception {}
+*/

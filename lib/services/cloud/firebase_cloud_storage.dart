@@ -41,15 +41,7 @@ class FirebaseCloudStorage {
           )
           .get()
           .then(
-            (value) => value.docs.map(
-              (doc) {
-                return CloudMeal(
-                  documentId: doc.id,
-                  ownerUserId: doc.data()[ownerUserIdFieldName] as String,
-                  text: doc.data()[textFieldName] as String,
-                );
-              },
-            ),
+            (value) => value.docs.map((doc) => CloudMeal.fromSnapshot(doc)),
           );
     } catch (e) {
       throw CouldNotGetAllMealException();
@@ -59,11 +51,17 @@ class FirebaseCloudStorage {
   static final FirebaseCloudStorage _shared =
       FirebaseCloudStorage._sharedInstance();
 
-  void createNewMeal({required String ownerUserId}) async {
-    await meals.add({
+  Future<CloudMeal> createNewMeal({required String ownerUserId}) async {
+    final document = await meals.add({
       ownerUserIdFieldName: ownerUserId,
       textFieldName: '',
     });
+    final fetchedMeal = await document.get();
+    return CloudMeal(
+      documentId: fetchedMeal.id,
+      ownerUserId: ownerUserId,
+      text: '',
+    );
   }
 
   //Constructor privado, no se puede acceder desde fuera de la clase [Técnica común en el patrón Singleton]

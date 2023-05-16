@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/enums/menu_action.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
-import 'package:mymeals/services/crud/meals_service.dart';
+import 'package:mymeals/services/cloud/cloud_meal.dart';
+import 'package:mymeals/services/cloud/firebase_cloud_storage.dart';
 import 'package:mymeals/utilities/dialogs/logout_dialog.dart';
 import 'package:mymeals/views/meals/meals_list_view.dart';
 
@@ -14,12 +15,12 @@ class MealsView extends StatefulWidget {
 }
 
 class _MealsViewState extends State<MealsView> {
-  late final MealsService _mealsService;
-  String get userEmail => AuthService.firebase().currentUser!.email;
+  late final FirebaseCloudStorage _mealsService;
+  String get userId => AuthService.firebase().currentUser!.id;
 
   @override
   void initState() {
-    _mealsService = MealsService();
+    _mealsService = FirebaseCloudStorage();
     super.initState();
   }
 
@@ -60,38 +61,27 @@ class _MealsViewState extends State<MealsView> {
           )
         ],
       ),
-      body: FutureBuilder(
-        future: _mealsService.getOrCreateUser(email: userEmail),
+      body: StreamBuilder(
+        stream: _mealsService.allMeals(ownerUserId: userId),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return StreamBuilder(
-                stream: _mealsService.allMeals,
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                    case ConnectionState.active:
-                      if (snapshot.hasData) {
-                        final allMeals = snapshot.data as List<DatabaseMeal>;
-                        return MealsListView(
-                          meals: allMeals,
-                          onDeleteMeal: (meal) async {
-                            await _mealsService.deleteMeal(id: meal.id);
-                          },
-                          onTap: (meal) {
-                            Navigator.of(context).pushNamed(
-                                createOrUpdateMealRoute,
-                                arguments: meal);
-                          },
-                        );
-                      } else {
-                        return const CircularProgressIndicator();
-                      }
-                    default:
-                      return const CircularProgressIndicator();
-                  }
-                },
-              );
+            case ConnectionState.waiting:
+            case ConnectionState.active:
+              if (snapshot.hasData) {
+                final allMeals = snapshot.data as Iterable<CloudMeal>;
+                return MealsListView(
+                  meals: allMeals,
+                  onDeleteMeal: (meal) async {
+                    await _mealsService.deleteMeal(documentId: meal.documentId);
+                  },
+                  onTap: (meal) {
+                    Navigator.of(context)
+                        .pushNamed(createOrUpdateMealRoute, arguments: meal);
+                  },
+                );
+              } else {
+                return const CircularProgressIndicator();
+              }
             default:
               return const CircularProgressIndicator();
           }

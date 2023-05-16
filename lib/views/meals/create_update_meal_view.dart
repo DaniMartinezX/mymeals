@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
-import 'package:mymeals/services/crud/meals_service.dart';
 import 'package:mymeals/utilities/generics/get_arguments.dart';
+import 'package:mymeals/services/cloud/cloud_meal.dart';
+import 'package:mymeals/services/cloud/firebase_cloud_storage.dart';
 
 class CreateUpdateMealView extends StatefulWidget {
   const CreateUpdateMealView({Key? key}) : super(key: key);
@@ -12,13 +12,13 @@ class CreateUpdateMealView extends StatefulWidget {
 }
 
 class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
-  DatabaseMeal? _meal;
-  late final MealsService _mealsService;
+  CloudMeal? _meal;
+  late final FirebaseCloudStorage _mealsService;
   late final TextEditingController _textController;
 
   @override
   void initState() {
-    _mealsService = MealsService();
+    _mealsService = FirebaseCloudStorage();
     _textController = TextEditingController();
     super.initState();
   }
@@ -30,7 +30,7 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
     }
     final text = _textController.text;
     await _mealsService.updateMeal(
-      meal: meal,
+      documentId: meal.documentId,
       text: text,
     );
   }
@@ -40,8 +40,8 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
     _textController.addListener(_textControllerListener);
   }
 
-  Future<DatabaseMeal> createOrGetExistingMeal(BuildContext context) async {
-    final widgetMeal = context.getArgument<DatabaseMeal>();
+  Future<CloudMeal> createOrGetExistingMeal(BuildContext context) async {
+    final widgetMeal = context.getArgument<CloudMeal>();
 
     if (widgetMeal != null) {
       _meal = widgetMeal;
@@ -54,9 +54,8 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
       return existingMeal;
     }
     final currentUser = AuthService.firebase().currentUser!;
-    final email = currentUser.email;
-    final owner = await _mealsService.getUser(email: email);
-    final newMeal = await _mealsService.createMeal(owner: owner);
+    final userId = currentUser.id;
+    final newMeal = await _mealsService.createNewMeal(ownerUserId: userId);
     _meal = newMeal;
     return newMeal;
   }
@@ -64,7 +63,7 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
   void _deleteMealIfTextIsEmpty() {
     final meal = _meal;
     if (_textController.text.isEmpty && meal != null) {
-      _mealsService.deleteMeal(id: meal.id);
+      _mealsService.deleteMeal(documentId: meal.documentId);
     }
   }
 
@@ -73,7 +72,7 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
     final text = _textController.text;
     if (meal != null && text.isNotEmpty) {
       await _mealsService.updateMeal(
-        meal: meal,
+        documentId: meal.documentId,
         text: text,
       );
     }

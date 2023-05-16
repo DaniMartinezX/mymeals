@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mymeals/services/crud/meals_service.dart';
+import 'package:mymeals/services/cloud/cloud_meal.dart';
 import 'package:mymeals/utilities/dialogs/delete_dialog.dart';
 
-typedef MealCallback = void Function(DatabaseMeal meals);
+typedef MealCallback = void Function(CloudMeal meals);
 
 class MealsListView extends StatelessWidget {
-  final List<DatabaseMeal> meals;
+  final Iterable<CloudMeal> meals;
   final MealCallback onDeleteMeal;
   final MealCallback onTap;
 
@@ -21,7 +21,7 @@ class MealsListView extends StatelessWidget {
     return ListView.builder(
         itemCount: meals.length,
         itemBuilder: (context, index) {
-          final meal = meals[index];
+          final meal = meals.elementAt(index);
           return ListTile(
             onTap: () {
               onTap(meal);
