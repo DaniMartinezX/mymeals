@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mymeals/constants/routes.dart';
 import 'package:mymeals/enums/menu_action.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
+import 'package:mymeals/services/auth/bloc/auth_bloc.dart';
+import 'package:mymeals/services/auth/bloc/auth_event.dart';
 import 'package:mymeals/services/cloud/cloud_meal.dart';
 import 'package:mymeals/services/cloud/firebase_cloud_storage.dart';
 import 'package:mymeals/utilities/dialogs/logout_dialog.dart';
 import 'package:mymeals/views/meals/meals_list_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart' show ReadContext;
 
 class MealsView extends StatefulWidget {
   const MealsView({super.key});
@@ -42,11 +46,9 @@ class _MealsViewState extends State<MealsView> {
                 case MenuAction.logout:
                   final shouldLogout = await showLogOutDialog(context);
                   if (shouldLogout) {
-                    await AuthService.firebase().logOut();
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      loginRoute,
-                      (route) => false,
-                    );
+                    context.read<AuthBloc>().add(
+                          const AuthEventLogOut(),
+                        );
                   }
               }
             },
