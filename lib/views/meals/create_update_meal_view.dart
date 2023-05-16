@@ -54,7 +54,7 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
       return existingMeal;
     }
     final currentUser = AuthService.firebase().currentUser!;
-    final email = currentUser.email!;
+    final email = currentUser.email;
     final owner = await _mealsService.getUser(email: email);
     final newMeal = await _mealsService.createMeal(owner: owner);
     _meal = newMeal;

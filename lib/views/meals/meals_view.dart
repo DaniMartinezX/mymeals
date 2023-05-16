@@ -15,7 +15,7 @@ class MealsView extends StatefulWidget {
 
 class _MealsViewState extends State<MealsView> {
   late final MealsService _mealsService;
-  String get userEmail => AuthService.firebase().currentUser!.email!;
+  String get userEmail => AuthService.firebase().currentUser!.email;
 
   @override
   void initState() {
