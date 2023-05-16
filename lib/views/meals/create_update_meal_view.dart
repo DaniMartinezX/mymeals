@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mymeals/services/auth/auth_service.dart';
+import 'package:mymeals/utilities/dialogs/cannot_share_empty_meal_dialog.dart';
 import 'package:mymeals/utilities/generics/get_arguments.dart';
 import 'package:mymeals/services/cloud/cloud_meal.dart';
 import 'package:mymeals/services/cloud/firebase_cloud_storage.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CreateUpdateMealView extends StatefulWidget {
   const CreateUpdateMealView({Key? key}) : super(key: key);
@@ -91,6 +93,19 @@ class _CreateUpdateMealViewState extends State<CreateUpdateMealView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('New meal'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final text = _textController.text;
+              if (_meal == null || text.isEmpty) {
+                await showCannotShareEmptyMealDialog(context);
+              } else {
+                Share.share(text);
+              }
+            },
+            icon: const Icon(Icons.share),
+          ),
+        ],
       ),
       body: FutureBuilder(
         future: createOrGetExistingMeal(context),
