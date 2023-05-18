@@ -6,6 +6,7 @@ import 'package:mymeals/services/auth/bloc/auth_bloc.dart';
 import 'package:mymeals/services/auth/bloc/auth_event.dart';
 import 'package:mymeals/services/auth/bloc/auth_state.dart';
 import 'package:mymeals/services/auth/firebase_auth_provider.dart';
+import 'package:mymeals/views/forgot_password_view.dart';
 import 'package:mymeals/views/login_view.dart';
 import 'package:mymeals/views/meals/meals_view.dart';
 import 'package:mymeals/views/meals/create_update_meal_view.dart';
@@ -55,6 +56,8 @@ class HomePage extends StatelessWidget {
         return const VerifyEmailView();
       } else if (state is AuthStateLoggedOut) {
         return const LoginView();
+      } else if (state is AuthStateForgotPassword) {
+        return const ForgotPasswordView();
       } else if (state is AuthStateRegistering) {
         return const RegisterView();
       } else {
